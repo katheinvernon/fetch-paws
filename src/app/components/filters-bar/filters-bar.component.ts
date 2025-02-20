@@ -25,9 +25,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   imports: [MatListModule, MatFormFieldModule, MatSelectModule, FormsModule, ReactiveFormsModule, MatButtonModule, MatIconModule, MatInputModule, MatSliderModule,
     MatChipsModule, MatAutocompleteModule],
 })
-export class BottomSheetOverviewExampleSheet {
+export class BottomSheet {
   private _bottomSheetRef =
-    inject<MatBottomSheetRef<BottomSheetOverviewExampleSheet>>(MatBottomSheetRef);
+    inject<MatBottomSheetRef<BottomSheet>>(MatBottomSheetRef);
 
   breedsSelector = [];
   zipCode = '';
@@ -37,7 +37,8 @@ export class BottomSheetOverviewExampleSheet {
 
   breeds = [];
 
-  filtersSelected = [];
+  temporaryFilters: { key: 'breeds' | 'age' | 'zipCodes', value: any }[] = [];
+  filtersApplied = false;
 
   breedsSubs = new Subscription();
   @Output() filtersChanged = new EventEmitter<boolean>();
@@ -47,38 +48,24 @@ export class BottomSheetOverviewExampleSheet {
 
   private _snackBar = inject(MatSnackBar);
 
-  constructor(private dogServices: DogsService, private route: ActivatedRoute, private router: Router,) {
-
+  constructor(private dogServices: DogsService, private route: ActivatedRoute, private router: Router, private bottomSheetRef: MatBottomSheetRef<BottomSheet>) {
+    this.bottomSheetRef.afterDismissed().subscribe(() => {
+      if (this.temporaryFilters) {
+        this.getFilters();
+        this.temporaryFilters = [];
+      } 
+    });
   }
 
   ngOnInit() {
     this.getBreeds();
-
-    this.route.queryParams.subscribe(async (params) => {
-      if (params['breeds']) this.breedsSelector = JSON.parse(params['breeds']);
-      if (params['zipCodes']) this.zipCodesSelected = JSON.parse(params['zipCodes']);
-      if (params['ageMin']) this.minAge = +params['ageMin'];
-      if (params['ageMax']) this.maxAge = +params['ageMax'];
-    });
+    this.getFilters();
   }
 
-  clearFilters() {
-    this.breedsSelector  = [];
-    this.zipCodesSelected = [];
-    this.zipCode = '';
-    this.minAge = 0;
-    this.maxAge = 20;
-
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {breeds: null, zipCodes: null, ageMin: 0, ageMax: 20},
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
+  getBreeds() {
+    this.breedsSubs = this.dogServices.getAllBreeds().subscribe((res: any) => {
+      this.breeds = res.body;
     });
-
-    setTimeout(() => {
-      this.applyFilters();
-    }, 1);
   }
 
   addZipCode(event: MatChipInputEvent): void {
@@ -87,7 +74,8 @@ export class BottomSheetOverviewExampleSheet {
     if (!this.zipCodesSelected.some(zc => zc === value) && this.zipCode !== '') {
       if (this.validZipCode()) {
         this.zipCodesSelected.push(value);
-        this.filtersHandler('zipCodes', this.zipCodesSelected);
+        // this.filtersHandler('zipCodes', this.zipCodesSelected);
+        this.setTemporaryFilters('zipCodes', this.zipCodesSelected);
         this.zipCode = '';
 
         // Clear the input value
@@ -103,20 +91,8 @@ export class BottomSheetOverviewExampleSheet {
 
   removeZipCode(zipCode: string): void {
     this.zipCodesSelected = this.zipCodesSelected.filter(zc => zc !== zipCode);
-    this.filtersHandler('zipCodes', this.zipCodesSelected);
-  }
-
-  openLink(event: MouseEvent): void {
-    this._bottomSheetRef.dismiss();
-    event.preventDefault();
-  }
-
-  breedsSelectionHandler() {
-    this.filtersHandler('breeds', this.breedsSelector);
-  }
-
-  ageRangeHandler() {
-    this.filtersHandler('age', { minAge: this.minAge, maxAge: this.maxAge });
+    // this.filtersHandler('zipCodes', this.zipCodesSelected);
+    this.setTemporaryFilters('zipCodes', this.zipCodesSelected);
   }
 
   validZipCode() {
@@ -124,12 +100,17 @@ export class BottomSheetOverviewExampleSheet {
     return onlyNumbers.test(this.zipCode) && this.zipCode.length == 5;
   }
 
-  getBreeds() {
-    this.breedsSubs = this.dogServices.getAllBreeds().subscribe((res: any) => {
-      this.breeds = res.body;
-    });
+  breedsSelectionHandler() {
+    // this.filtersHandler('breeds', this.breedsSelector);
+    this.setTemporaryFilters('breeds', this.breedsSelector);
   }
 
+  ageRangeHandler() {
+    // this.filtersHandler('age', { minAge: this.minAge, maxAge: this.maxAge });
+    this.setTemporaryFilters('age', { minAge: this.minAge, maxAge: this.maxAge });
+  }
+
+  //Filters
   filtersHandler(key: 'breeds' | 'age' | 'zipCodes', value: any) {
     if (key === 'age') {
       this.router.navigate([], {
@@ -154,16 +135,102 @@ export class BottomSheetOverviewExampleSheet {
     }
   }
 
+  saveFilters() {
+    if (this.temporaryFilters.length > 0) {
+      let queryParam = {};
+
+      this.temporaryFilters.forEach(tf => {
+        if (tf.key === 'age') {
+          queryParam = { ...queryParam, ageMin: tf.value.minAge, ageMax: tf.value.maxAge };
+        } else {
+          let aux = tf.value;
+          if (tf.value instanceof Array) {
+            aux = JSON.stringify(tf.value);
+          }
+
+          queryParam = { ...queryParam, [tf.key]: aux };
+        }
+      })
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: queryParam,
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+
+      this.temporaryFilters = [];
+    } else {
+      this.openSnackBar('There are no filter changes to apply', 'Ok');
+    }
+  }
+
   applyFilters() {
-    this.filtersChanged.emit(true);
+    console.log('entro en apply');
+    
+    this.saveFilters();
+    setTimeout(() => {
+      this.filtersChanged.emit(true);
+    }, 1);
+    this.closeBottomSheet();
+  }
+
+  clearFilters() {
+    this.breedsSelector = [];
+    this.zipCodesSelected = [];
+    this.zipCode = '';
+    this.minAge = 0;
+    this.maxAge = 20;
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { breeds: null, zipCodes: null, ageMin: 0, ageMax: 20 },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+
+    setTimeout(() => {
+      console.log('entro eb clear');
+      
+      this.filtersChanged.emit(true);
+    }, 1);
+  }
+
+  setTemporaryFilters(key: 'breeds' | 'age' | 'zipCodes', value: any) {
+    if (this.temporaryFilters.length > 0) {
+      const filterIndex = this.temporaryFilters.findIndex(filter => filter.key == key);
+      if (filterIndex !== -1) {
+        this.temporaryFilters[filterIndex].value = value;
+      } else {
+        this.temporaryFilters.push({ key, value });
+      }
+    } else {
+      this.temporaryFilters.push({ key, value });
+    }
+  }
+
+  getFilters() {
+    const params = this.route.snapshot.queryParams;
+    console.log('get', params);
+    
+    if (params['breeds']) this.breedsSelector = JSON.parse(params['breeds']);
+    if (params['zipCodes']) this.zipCodesSelected = JSON.parse(params['zipCodes']);
+    if (params['ageMin']) this.minAge = +params['ageMin'];
+    if (params['ageMax']) this.maxAge = +params['ageMax'];
+  }
+
+  closeBottomSheet(): void {
+    this.bottomSheetRef.dismiss();
   }
 
   openSnackBar(message: string, action?: string) {
-    this._snackBar.open(message, action);
+    this._snackBar.open(message, action, {
+      duration: 2000
+    });
   }
 
   ngOnDestroy() {
-    if(this.breedsSubs) this.breedsSubs.unsubscribe();
+    if (this.breedsSubs) this.breedsSubs.unsubscribe();
   }
 }
 
@@ -185,7 +252,7 @@ export class FiltersBarComponent {
     sorts: true
   }
 
-  filtersSubs = new Subscription(); 
+  filtersSubs = new Subscription();
 
   sortingElements: {
     key: string,
@@ -214,14 +281,13 @@ export class FiltersBarComponent {
     ];
 
   constructor(private route: ActivatedRoute, private router: Router,) {
-    this.route.queryParams.subscribe(async (params) => {
-      if (params['sort']) {
-        const aux = params['sort'].split(':');
-        this.sortHandler(aux[0], undefined, aux[1]);
-      } else {
-        this.sortHandler('BREED', 0);
-      }
-    });
+    const params = this.route.snapshot.queryParams;
+    if (params['sort']) {
+      const aux = params['sort'].split(':');
+      this.sortHandler(aux[0], undefined, aux[1], true);
+    } else {
+      this.sortHandler('BREED', 0, undefined, true);
+    }
   }
 
   /**
@@ -229,7 +295,7 @@ export class FiltersBarComponent {
    * @param sortIndex Index of the sort (based on sortingElements array)
    * @param key sort key (based on sortingElements array)
    */
-  sortHandler(key: string, sortIndex?: number, direction?: 'asc' | 'desc') {
+  sortHandler(key: string, sortIndex?: number, direction?: 'asc' | 'desc', initializing?: boolean) {
     if (sortIndex !== undefined && sortIndex !== -1) {
       if (!this.sortingElements[sortIndex].active) {
         this.sortingElements.forEach(sort => sort.active = false);
@@ -241,24 +307,35 @@ export class FiltersBarComponent {
         this.sortingElements[sortIndex].direction = 'asc';
       }
 
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: {sort: `${this.sortingElements[sortIndex].key.toLowerCase()}:${this.sortingElements[sortIndex].direction}`},
-        queryParamsHandling: 'merge',
-        replaceUrl: true,
-      });
+      if (!initializing) {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { sort: `${this.sortingElements[sortIndex].key.toLowerCase()}:${this.sortingElements[sortIndex].direction}` },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
     } else {
       const index = this.sortingElements.findIndex(e => e.key === key.toUpperCase());
       this.sortingElements[index].active = true;
       this.sortingElements[index].direction = direction ?? 'asc';
     }
 
+    console.log('entro en sort');
+    
+    if (!initializing) {
+      setTimeout(() => {
+        this.filtersChanged.emit(true);
+      }, 1);
+    }
   }
 
   openBottomSheet(): void {
-    const bottomSheetRef = this._bottomSheet.open(BottomSheetOverviewExampleSheet);
+    const bottomSheetRef = this._bottomSheet.open(BottomSheet);
 
     this.filtersSubs = bottomSheetRef.instance.filtersChanged.subscribe(res => {
+      console.log('entro en open');
+      
       this.filtersChanged.emit(true)
     });
   }

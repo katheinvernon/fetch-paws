@@ -44,7 +44,9 @@ export class DogsListComponent {
     this.getFilters();
   }
 
-  getFilters() {
+  getFilters(filtersChanged?: boolean) {
+    console.log('entro p');
+    
     const params = this.route.snapshot.queryParams;
     let query = {};
 
@@ -62,15 +64,23 @@ export class DogsListComponent {
       this.addQueryParam('size', this.pageSize);
     }
 
-    if (params['from']) {
-      query = { ...query, from: params['from'] };
-      this.pageIndex = params['from'] / params['size'];
+    if (!filtersChanged) {
+      if (params['from']) {
+        query = { ...query, from: params['from'] };
+        this.pageIndex = params['from'] / params['size'];
+      } else {
+        query = { ...query, from: this.pageIndex };
+        this.addQueryParam('from', this.pageIndex);
+      }
     } else {
-      query = { ...query, from: this.pageIndex };
-      this.addQueryParam('from', this.pageIndex);
+      this.pageIndex = 0;
+      query = { ...query, from: 0 };
+      this.addQueryParam('from', 0);
     }
 
-    this.getDogs(query);
+setTimeout(() => {
+  this.getDogs(query);
+}, 2);
   }
 
   getDogs(query?: Object) {
@@ -101,16 +111,16 @@ export class DogsListComponent {
   }
 
   filtersListener(event: any) {
-    this.getFilters();
+    this.getFilters(true);
   }
 
   //Paginator
 
   handlePageEvent(e: PageEvent) {
-    if(this.pageSize != e.pageSize) {
+    if (this.pageSize != e.pageSize) {
       this.router.navigate([], {
         relativeTo: this.route,
-        queryParams: {size: e.pageSize, from: '0'},
+        queryParams: { size: e.pageSize, from: '0' },
         queryParamsHandling: 'merge',
         replaceUrl: true,
       });
@@ -122,6 +132,10 @@ export class DogsListComponent {
     this.length = e.length;
     this.pageSize = e.pageSize;
     this.pageIndex = e.pageIndex;
+
+    setTimeout(() => {
+      this.getFilters();
+    }, 2);
   }
 
   setPageSizeOptions(setPageSizeOptionsInput: string) {
