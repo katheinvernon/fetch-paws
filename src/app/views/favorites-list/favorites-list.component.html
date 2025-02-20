@@ -2,7 +2,8 @@
 <app-filters-bar [config]="filtersConfig"></app-filters-bar>
 <div class="favorite-list__layout relative">
     <div class="absolute back-btn text-secondary">
-        <span class="cursor-pointer" (click)="goHome()">< Home</span>
+        <span class="cursor-pointer" (click)="goHome()">
+            < Home</span>
     </div>
     <div class="layout__body-wrapper layout__body-wrapper--full px-2">
         <h1 class="text-primary text-center">My favorites </h1>
@@ -11,13 +12,14 @@
             <app-card [dog]="dog"></app-card>
             }
         </div>
-    
+
     </div>
     <div class="action-button__wrapper px-2 absolute">
         @if (isLoading | async) {
         <app-loader [options]="{inline: true}"></app-loader>
         } @else {
-        <button mat-flat-button type="button" class="w-100" (click)="goToMatch()">Let's match!</button>
+        <button mat-flat-button type="button" class="w-100" (click)="goToMatch()" [disabled]="!hasFavorites" 
+            disabledInteractive matTooltip="{{hasFavorites ? 'Click to find your match' : 'You have to add at least one dog to your favorites to find your match'}}">Let's match!</button>
         }
     </div>
 </div>

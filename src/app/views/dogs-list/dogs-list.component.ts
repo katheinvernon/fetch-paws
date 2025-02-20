@@ -11,11 +11,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
 import { LoaderComponent } from '../../components/loader/loader.component';
+import { FavoriteListHandlerService } from '../../services/favorite-list-handler/favorite-list-handler.service';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-dogs-list',
   standalone: true,
-  imports: [HeaderComponent, MatCardModule, MatButtonModule, CardComponent, FiltersBarComponent, MatPaginatorModule, CommonModule, LoaderComponent],
+  imports: [HeaderComponent, MatCardModule, MatButtonModule, CardComponent, FiltersBarComponent, MatPaginatorModule, CommonModule, LoaderComponent, MatTooltip],
   templateUrl: './dogs-list.component.html',
   styleUrl: './dogs-list.component.scss'
 })
@@ -35,8 +37,10 @@ export class DogsListComponent {
   pageEvent: PageEvent | undefined;
 
   isLoading = new BehaviorSubject<boolean>(false);
+  hasFavorites = false;
+  favoritesSubs = new Subscription();
 
-  constructor(private dogService: DogsService, private route: ActivatedRoute, private router: Router,) {
+  constructor(private dogService: DogsService, private route: ActivatedRoute, private router: Router, private listHandlerService: FavoriteListHandlerService,) {
 
   }
 
@@ -45,6 +49,10 @@ export class DogsListComponent {
       this.getDogs(res);
     }).catch(error => {
       console.error('Error getting filters information', error);
+    });
+
+    this.favoritesSubs = this.listHandlerService.favoriteDogs.subscribe(dogsList => {
+      this.hasFavorites = dogsList.length > 0;
     });
   }
 
@@ -176,6 +184,12 @@ export class DogsListComponent {
   }
 
   goToMatch() {
-    this.router.navigate(['/user/matching'])
+    if (this.hasFavorites) {
+      this.router.navigate(['/user/matching'])
+    }
+  }
+
+  ngOnDestroy() {
+    this.favoritesSubs.unsubscribe();
   }
 }

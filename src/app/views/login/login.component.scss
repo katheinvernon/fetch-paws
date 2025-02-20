@@ -3,7 +3,6 @@
 .login__layout-wrapper {
     height: 100vh;
     background-image: url("../../../../public/assets/paws-bg.png");
-    // background-color: rgb(255 255 255 / 95%);
     background-repeat: repeat;
     background-blend-mode: lighten;
     background-size: contain;
@@ -30,5 +29,22 @@
         .login__form-field {
             width: 100%;
         }
+    }
+}
+
+.footer-wrapper {
+    bottom: 0;
+    left: 0;
+    background-color: var(--primary-color);
+    color: var(--color-white);
+    font-weight: bold;
+    font-size: 0.75rem;
+    padding: 6px 24px;
+
+    width: calc(100% - 48px);
+
+    img {
+        width: 24px;
+        object-fit: contain;
     }
 }

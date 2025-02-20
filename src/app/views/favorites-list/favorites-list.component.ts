@@ -10,11 +10,12 @@ import { LoaderComponent } from '../../components/loader/loader.component';
 import { MatButtonModule } from '@angular/material/button';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DogsService } from '../../services/dogs/dogs.service';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-favorites-list',
   standalone: true,
-  imports: [HeaderComponent, CardComponent, FiltersBarComponent, CommonModule, LoaderComponent, MatButtonModule],
+  imports: [HeaderComponent, CardComponent, FiltersBarComponent, CommonModule, LoaderComponent, MatButtonModule, MatTooltip],
   templateUrl: './favorites-list.component.html',
   styleUrl: './favorites-list.component.scss'
 })
@@ -32,6 +33,7 @@ export class FavoritesListComponent {
 
   dogsSubs = new Subscription(); 
   favoritesSubs = new Subscription();
+  hasFavorites = false;
 
   constructor(private listHandlerService: FavoriteListHandlerService, private router: Router, private dogService: DogsService, private route: ActivatedRoute, private location: Location) {
 
@@ -41,6 +43,7 @@ export class FavoritesListComponent {
     this.listHandlerService.updateFavoriteDogs();
 
     this.favoritesSubs = this.listHandlerService.favoriteDogs.subscribe(dogsList => {
+      this.hasFavorites = dogsList.length > 0;
       this.getDogs(dogsList);
     });
 
@@ -62,10 +65,11 @@ export class FavoritesListComponent {
   }
 
   goToMatch() {
-    this.router.navigate(['/user/matching'])
+    if(this.hasFavorites) {
+      this.router.navigate(['/user/matching'])
+    }
   }
 
-  // Función para ordenar los datos por un key específico y en orden ascendente o descendente
   sortData(key: string, order: 'asc' | 'desc') {
     this.doggies.sort((a, b) => {
       if (a[key] < b[key]) {

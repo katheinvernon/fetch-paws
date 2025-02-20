@@ -28,18 +28,13 @@ export class LoginComponent {
 
   constructor(private router: Router, private authService: AuthService) {
     this.loginForm = new FormGroup({
-      email: new FormControl('sdasda@gmail.com', [
+      email: new FormControl('', [
         Validators.required,
         Validators.minLength(4),
         Validators.email]),
-      name: new FormControl('dsadasdad', [
+      name: new FormControl('', [
         Validators.required]),
     })
-  }
-
-  getErrorMessage(key: string) {
-    return this.loginForm.controls[key].hasError('email') ? 'Invalid email' : key === 'email' ?
-      'Write your email' : 'Write your full name';
   }
 
   onSubmit(): void {

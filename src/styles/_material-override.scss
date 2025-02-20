@@ -19,6 +19,8 @@
   @include mat.button-overrides((
     filled-container-color: var(--secondary-color),
     filled-label-text-color: var(--color-black),
+    filled-disabled-container-color: var(--color-grey),
+    filled-disabled-label-text-color: var(--color-white)
   ));
 
   @include mat.fab-overrides((
@@ -42,7 +44,6 @@
   ));
 
   @include mat.paginator-overrides((
-    // container-text-color: orange,
     container-background-color: var(--primary-color),
   ));
 }

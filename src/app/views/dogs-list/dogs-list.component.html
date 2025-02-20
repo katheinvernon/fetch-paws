@@ -1,12 +1,16 @@
 <app-header></app-header>
 <app-filters-bar (filtersChanged)="filtersListener($event)"></app-filters-bar>
 @if (isLoading | async) {
-    <app-loader></app-loader>
-    }
+<app-loader></app-loader>
+}
 <div class="dogs-list__layout relative">
     <div class="layout__body-wrapper layout__body-wrapper--full px-2">
         <h1 class="text-primary text-center">Let's find your new best friend!</h1>
-    
+        <div class="w-100 text-center">
+            <span class="hint">Select your favorite dogs and then click on the 'Let's match' button to find your
+                match</span>
+        </div>
+
         <div class="d-flex flex-wrap w-100 cards-wrapper justify-c mb-3">
             @for(dog of doggies; track dog.id) {
             <app-card [dog]="dog"></app-card>
@@ -15,12 +19,12 @@
     </div>
     <div class="paginator__wrapper px-2 absolute">
         <div class="action-button__wrapper px-2">
-             <!-- @else { -->
-            <button mat-flat-button type="button" class="w-100" (click)="goToMatch()">Let's match!</button>
-            <!-- } -->
+            <button mat-flat-button type="button" class="w-100" (click)="goToMatch()" [disabled]="!hasFavorites"
+                disabledInteractive matTooltip="{{hasFavorites ? 'Click to find your match' : 'You have to add at least one dog to your favorites to find your match'}}">Let's
+                match!</button>
         </div>
-        <mat-paginator #paginator (page)="handlePageEvent($event)" [length]="length"
-            [pageSize]="pageSize" [disabled]="disabled" [showFirstLastButtons]="showFirstLastButtons"
+        <mat-paginator #paginator (page)="handlePageEvent($event)" [length]="length" [pageSize]="pageSize"
+            [disabled]="disabled" [showFirstLastButtons]="showFirstLastButtons"
             [pageSizeOptions]="showPageSizeOptions ? pageSizeOptions : []" [hidePageSize]="hidePageSize"
             [pageIndex]="pageIndex" aria-label="Select page">
         </mat-paginator>

@@ -2,12 +2,43 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.7.
 
+Angular CLI: 19.1.7
+Node: 20.18.3
+Package Manager: npm 10.2.3
+
+
+## Prerequisites
+
+Before running the project locally, make sure you have the following software installed:
+
+- **Node.js** (version 20.18.3)
+- **Angular CLI** (version 19.1.7)
+- **Git** (optional but recommended for managing version control)
+
+You can verify your versions using the following commands:
+
+```bash
+node -v
+ng --version
+```
+
+to install node modules, run:
+
+```bash
+npm install
+```
+
 ## Development server
 
 To start a local development server, run:
 
 ```bash
-ng serve
+ng serve 
+```
+or 
+
+```bash
+npm run start 
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.

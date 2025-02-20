@@ -74,7 +74,6 @@ export class BottomSheet {
     if (!this.zipCodesSelected.some(zc => zc === value) && this.zipCode !== '') {
       if (this.validZipCode()) {
         this.zipCodesSelected.push(value);
-        // this.filtersHandler('zipCodes', this.zipCodesSelected);
         this.setTemporaryFilters('zipCodes', this.zipCodesSelected);
         this.zipCode = '';
 
@@ -91,7 +90,6 @@ export class BottomSheet {
 
   removeZipCode(zipCode: string): void {
     this.zipCodesSelected = this.zipCodesSelected.filter(zc => zc !== zipCode);
-    // this.filtersHandler('zipCodes', this.zipCodesSelected);
     this.setTemporaryFilters('zipCodes', this.zipCodesSelected);
   }
 
@@ -101,12 +99,10 @@ export class BottomSheet {
   }
 
   breedsSelectionHandler() {
-    // this.filtersHandler('breeds', this.breedsSelector);
     this.setTemporaryFilters('breeds', this.breedsSelector);
   }
 
   ageRangeHandler() {
-    // this.filtersHandler('age', { minAge: this.minAge, maxAge: this.maxAge });
     this.setTemporaryFilters('age', { minAge: this.minAge, maxAge: this.maxAge });
   }
 
@@ -369,12 +365,5 @@ export class FiltersBarComponent {
   ngOnDestroy() {
     this.filtersSubs.unsubscribe();
   }
-}
-function resolve() {
-  throw new Error('Function not implemented.');
-}
-
-function reject(error: any) {
-  throw new Error('Function not implemented.');
 }
 
