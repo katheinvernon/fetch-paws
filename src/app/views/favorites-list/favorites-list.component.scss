@@ -24,3 +24,12 @@
     height: calc(100% - 186px);
     overflow: hidden;
 }
+
+.back-btn {
+    top: 20px;
+    left: 12px;
+    
+    @include from ($tablet) {
+        left: 48px;
+    }
+}

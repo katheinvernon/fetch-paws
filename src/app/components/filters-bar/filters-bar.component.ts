@@ -53,7 +53,7 @@ export class BottomSheet {
       if (this.temporaryFilters) {
         this.getFilters();
         this.temporaryFilters = [];
-      } 
+      }
     });
   }
 
@@ -135,65 +135,88 @@ export class BottomSheet {
     }
   }
 
-  saveFilters() {
-    if (this.temporaryFilters.length > 0) {
-      let queryParam = {};
+  saveFilters(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.temporaryFilters.length > 0) {
+        let queryParam = {};
 
-      this.temporaryFilters.forEach(tf => {
-        if (tf.key === 'age') {
-          queryParam = { ...queryParam, ageMin: tf.value.minAge, ageMax: tf.value.maxAge };
-        } else {
-          let aux = tf.value;
-          if (tf.value instanceof Array) {
-            aux = JSON.stringify(tf.value);
-          }
+        try {
+          this.temporaryFilters.forEach(tf => {
+            if (tf.key === 'age') {
+              queryParam = { ...queryParam, ageMin: tf.value.minAge, ageMax: tf.value.maxAge };
+            } else {
+              let aux = tf.value;
+              if (tf.value instanceof Array) {
+                aux = JSON.stringify(tf.value);
+              }
 
-          queryParam = { ...queryParam, [tf.key]: aux };
+              queryParam = { ...queryParam, [tf.key]: aux };
+            }
+          });
+
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: queryParam,
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          }).then(() => {
+            this.temporaryFilters = [];
+            resolve();
+          }).catch((error) => {
+            this.openSnackBar('An error occurred during navigation', 'Ok');
+            reject(error);
+          });
+
+        } catch (error) {
+          this.openSnackBar('Error processing filters', 'Ok');
+          reject(error);
         }
+      } else {
+        this.openSnackBar('There are no filter changes to apply', 'Ok');
+        resolve();
+      }
+    });
+  }
+
+  applyFilters() {
+    this.saveFilters().then(() => {
+      this.filtersChanged.emit(true);
+      this.closeBottomSheet();
+    }).catch((error: any) => {
+      console.error('Error applying filters', error);
+      this.openSnackBar('Error applying filters', 'Ok');
+    })
+
+  }
+
+  clearFilters() {
+    this.clearFilterValues()
+      .then(() => {
+        this.filtersChanged.emit(true);
       })
+      .catch((error) => {
+        console.error('Error clearing filters', error);
+        this.openSnackBar('Error clearing filters', 'Ok');
+      });
+  }
+
+  clearFilterValues(): Promise<void> {
+    return new Promise((resolve) => {
+      this.breedsSelector = [];
+      this.zipCodesSelected = [];
+      this.zipCode = '';
+      this.minAge = 0;
+      this.maxAge = 20;
 
       this.router.navigate([], {
         relativeTo: this.route,
-        queryParams: queryParam,
+        queryParams: { breeds: null, zipCodes: null, ageMin: 0, ageMax: 20 },
         queryParamsHandling: 'merge',
         replaceUrl: true,
       });
 
-      this.temporaryFilters = [];
-    } else {
-      this.openSnackBar('There are no filter changes to apply', 'Ok');
-    }
-  }
-
-  applyFilters() {
-    console.log('entro en apply');
-    
-    this.saveFilters();
-    setTimeout(() => {
-      this.filtersChanged.emit(true);
-    }, 1);
-    this.closeBottomSheet();
-  }
-
-  clearFilters() {
-    this.breedsSelector = [];
-    this.zipCodesSelected = [];
-    this.zipCode = '';
-    this.minAge = 0;
-    this.maxAge = 20;
-
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { breeds: null, zipCodes: null, ageMin: 0, ageMax: 20 },
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
-    });
-
-    setTimeout(() => {
-      console.log('entro eb clear');
-      
-      this.filtersChanged.emit(true);
-    }, 1);
+      resolve();
+    })
   }
 
   setTemporaryFilters(key: 'breeds' | 'age' | 'zipCodes', value: any) {
@@ -211,8 +234,6 @@ export class BottomSheet {
 
   getFilters() {
     const params = this.route.snapshot.queryParams;
-    console.log('get', params);
-    
     if (params['breeds']) this.breedsSelector = JSON.parse(params['breeds']);
     if (params['zipCodes']) this.zipCodesSelected = JSON.parse(params['zipCodes']);
     if (params['ageMin']) this.minAge = +params['ageMin'];
@@ -294,48 +315,53 @@ export class FiltersBarComponent {
    * @description handle the sorting functionality
    * @param sortIndex Index of the sort (based on sortingElements array)
    * @param key sort key (based on sortingElements array)
+   * @param direction sort direction
+   * @param initializing to check if it's called by the constructor
    */
   sortHandler(key: string, sortIndex?: number, direction?: 'asc' | 'desc', initializing?: boolean) {
-    if (sortIndex !== undefined && sortIndex !== -1) {
-      if (!this.sortingElements[sortIndex].active) {
-        this.sortingElements.forEach(sort => sort.active = false);
-        this.sortingElements[sortIndex].active = true;
-        this.sortingElements[sortIndex].direction = 'asc';
-      } else if (this.sortingElements[sortIndex].active && this.sortingElements[sortIndex].direction === 'asc') {
-        this.sortingElements[sortIndex].direction = 'desc';
-      } else {
-        this.sortingElements[sortIndex].direction = 'asc';
-      }
-
+    this.setSortValues(key, sortIndex, direction, initializing).then(() => {
       if (!initializing) {
+        this.filtersChanged.emit(true);
+      }
+    }).catch(error => {
+      console.error('Error in sorting', error);
+    });
+  }
+
+  setSortValues(key: string, sortIndex?: number, direction?: 'asc' | 'desc', initializing?: boolean): Promise<void> {
+    return new Promise((resolve) => {
+      if (sortIndex !== undefined && sortIndex !== -1) {
+        if (!this.sortingElements[sortIndex].active) {
+          this.sortingElements.forEach(sort => sort.active = false);
+          this.sortingElements[sortIndex].active = true;
+          this.sortingElements[sortIndex].direction = 'asc';
+        } else if (this.sortingElements[sortIndex].active && this.sortingElements[sortIndex].direction === 'asc') {
+          this.sortingElements[sortIndex].direction = 'desc';
+        } else {
+          this.sortingElements[sortIndex].direction = 'asc';
+        }
+
         this.router.navigate([], {
           relativeTo: this.route,
           queryParams: { sort: `${this.sortingElements[sortIndex].key.toLowerCase()}:${this.sortingElements[sortIndex].direction}` },
           queryParamsHandling: 'merge',
           replaceUrl: true,
         });
-      }
-    } else {
-      const index = this.sortingElements.findIndex(e => e.key === key.toUpperCase());
-      this.sortingElements[index].active = true;
-      this.sortingElements[index].direction = direction ?? 'asc';
-    }
 
-    console.log('entro en sort');
-    
-    if (!initializing) {
-      setTimeout(() => {
-        this.filtersChanged.emit(true);
-      }, 1);
-    }
+        resolve();
+      } else {
+        const index = this.sortingElements.findIndex(e => e.key === key.toUpperCase());
+        this.sortingElements[index].active = true;
+        this.sortingElements[index].direction = direction ?? 'asc';
+        resolve();
+      }
+    })
   }
 
   openBottomSheet(): void {
     const bottomSheetRef = this._bottomSheet.open(BottomSheet);
 
     this.filtersSubs = bottomSheetRef.instance.filtersChanged.subscribe(res => {
-      console.log('entro en open');
-      
       this.filtersChanged.emit(true)
     });
   }
@@ -344,3 +370,11 @@ export class FiltersBarComponent {
     this.filtersSubs.unsubscribe();
   }
 }
+function resolve() {
+  throw new Error('Function not implemented.');
+}
+
+function reject(error: any) {
+  throw new Error('Function not implemented.');
+}
+

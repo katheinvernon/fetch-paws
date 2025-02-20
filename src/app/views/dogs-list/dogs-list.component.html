@@ -1,5 +1,8 @@
 <app-header></app-header>
 <app-filters-bar (filtersChanged)="filtersListener($event)"></app-filters-bar>
+@if (isLoading | async) {
+    <app-loader></app-loader>
+    }
 <div class="dogs-list__layout relative">
     <div class="layout__body-wrapper layout__body-wrapper--full px-2">
         <h1 class="text-primary text-center">Let's find your new best friend!</h1>
@@ -12,11 +15,9 @@
     </div>
     <div class="paginator__wrapper px-2 absolute">
         <div class="action-button__wrapper px-2">
-            @if (isLoading | async) {
-            <app-loader [options]="{inline: true}"></app-loader>
-            } @else {
+             <!-- @else { -->
             <button mat-flat-button type="button" class="w-100" (click)="goToMatch()">Let's match!</button>
-            }
+            <!-- } -->
         </div>
         <mat-paginator #paginator (page)="handlePageEvent($event)" [length]="length"
             [pageSize]="pageSize" [disabled]="disabled" [showFirstLastButtons]="showFirstLastButtons"
