@@ -3,7 +3,7 @@ import { ApiService } from '../api/api.service';
 import endpoints from '../../constants/endpoints';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, lastValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -23,8 +23,10 @@ export class AuthService {
     return this.http.post(`${environment.apiUrl}${endpoints.LOGIN}`, value, {observe: 'response', withCredentials: true, responseType: 'text'});
   }
 
-  logout() {
-    return this.http.post(`${environment.apiUrl}${endpoints.LOGOUT}`, {observe: 'response', withCredentials: true, responseType: 'text'});
+  async logout() {
+    return await lastValueFrom(
+     this.http.post(`${environment.apiUrl}${endpoints.LOGOUT}`, {observe: 'response', withCredentials: true, responseType: 'text'})
+    );
   }
 
   authenticationHandler(authenticated: boolean) {
