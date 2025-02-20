@@ -41,36 +41,63 @@ export class DogsListComponent {
   }
 
   ngOnInit() {
-    this.getFilters();
+    this.getFilters().then(res => {
+      this.getDogs(res);
+    }).catch(error => {
+      console.error('Error getting filters information', error);
+    });
   }
 
-  getFilters() {
-    const params = this.route.snapshot.queryParams;
-    let query = {};
+  getFilters(filtersChanged?: boolean): Promise<object> {
+    return new Promise((resolve) => {
+      const params = this.route.snapshot.queryParams;
+      let query = {};
 
-    if (params['breeds']) query = { breeds: JSON.parse(params['breeds']) };
-    if (params['zipCodes']) query = { ...query, zipCodes: JSON.parse(params['zipCodes']) };
-    if (params['ageMin']) query = { ...query, ageMin: params['ageMin'] };
-    if (params['ageMax']) query = { ...query, ageMax: params['ageMax'] };
-    if (params['sort']) query = { ...query, sort: params['sort'] };
+      if (params['breeds']) query = { breeds: JSON.parse(params['breeds']) };
+      if (params['zipCodes']) query = { ...query, zipCodes: JSON.parse(params['zipCodes']) };
+      if (params['ageMin']) query = { ...query, ageMin: params['ageMin'] };
+      if (params['ageMax']) query = { ...query, ageMax: params['ageMax'] };
+      if (params['sort']) query = { ...query, sort: params['sort'] };
 
-    if (params['size']) {
-      query = { ...query, size: params['size'] };
-      this.pageSize = params['size'];
-    } else {
-      query = { ...query, size: this.pageSize };
-      this.addQueryParam('size', this.pageSize);
-    }
+      if (params['size']) {
+        query = { ...query, size: params['size'] };
+        this.pageSize = params['size'];
+      } else {
+        query = { ...query, size: this.pageSize };
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {size: this.pageSize},
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
 
-    if (params['from']) {
-      query = { ...query, from: params['from'] };
-      this.pageIndex = params['from'] / params['size'];
-    } else {
-      query = { ...query, from: this.pageIndex };
-      this.addQueryParam('from', this.pageIndex);
-    }
+      if (!filtersChanged) {
+        if (params['from']) {
+          query = { ...query, from: params['from'] };
+          this.pageIndex = params['from'] / params['size'];
+        } else {
+          query = { ...query, from: this.pageIndex };
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: {from: this.pageIndex},
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        }
+      } else {
+        this.pageIndex = 0;
+        query = { ...query, from: 0 };
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {from: 0},
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
 
-    this.getDogs(query);
+      resolve(query);
+    });
   }
 
   getDogs(query?: Object) {
@@ -89,39 +116,57 @@ export class DogsListComponent {
     });
   }
 
-  addQueryParam(key: string, value: string | number) {
-    const queryParam = { [key]: value };
-
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: queryParam,
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
-    });
-  }
-
   filtersListener(event: any) {
-    this.getFilters();
+    this.getFilters(true).then(res => {
+      this.getDogs(res);
+    }).catch(error => {
+      console.error('Error getting filters information', error);
+    });
   }
 
   //Paginator
 
   handlePageEvent(e: PageEvent) {
-    if(this.pageSize != e.pageSize) {
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: {size: e.pageSize, from: '0'},
-        queryParamsHandling: 'merge',
-        replaceUrl: true,
+    this.isLoading.next(true);
+    this.setPaginationValues(e).then(() => {
+      this.getFilters().then(res => {
+        this.getDogs(res);
+        this.isLoading.next(false);
+      }).catch(error => {
+        console.error('Error getting filters information', error);
+        this.isLoading.next(false);
       });
-    } else {
-      this.addQueryParam('from', e.pageIndex * e.pageSize);
-    }
+    }).catch(error => {
+      console.error('Error setting paginator information', error);
+      this.isLoading.next(false);
+    });
+  }
 
-    this.pageEvent = e;
-    this.length = e.length;
-    this.pageSize = e.pageSize;
-    this.pageIndex = e.pageIndex;
+  setPaginationValues(e: PageEvent): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.pageSize != e.pageSize) {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { size: e.pageSize, from: '0' },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      } else {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {from: e.pageIndex * e.pageSize},
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
+
+      this.pageEvent = e;
+      this.length = e.length;
+      this.pageSize = e.pageSize;
+      this.pageIndex = e.pageIndex;
+
+      resolve();
+    });
   }
 
   setPageSizeOptions(setPageSizeOptionsInput: string) {

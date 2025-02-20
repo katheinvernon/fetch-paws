@@ -5,7 +5,7 @@ import { DogsService } from '../../services/dogs/dogs.service';
 import { FavoriteListHandlerService } from '../../services/favorite-list-handler/favorite-list-handler.service';
 import { LoaderComponent } from '../../components/loader/loader.component';
 import { BehaviorSubject, map, of, switchMap } from 'rxjs';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -21,7 +21,7 @@ export class MatchResultComponent {
   dog: any;
   isLoading = new BehaviorSubject<boolean>(true);
 
-  constructor(private dogService: DogsService, private listHandlerService: FavoriteListHandlerService, private router: Router,) {
+  constructor(private dogService: DogsService, private listHandlerService: FavoriteListHandlerService, private router: Router, private location: Location) {
     this.listHandlerService.updateFavoriteDogs();
 
     this.listHandlerService.favoriteDogs.subscribe(dogsList => {
@@ -49,6 +49,6 @@ export class MatchResultComponent {
   }
 
   goBack() {
-    this.router.navigate(['/user/favorites-list'])
+    this.location.back();
   }
 }

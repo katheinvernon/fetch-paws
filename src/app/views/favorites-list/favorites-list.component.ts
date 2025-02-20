@@ -5,7 +5,7 @@ import { CardComponent } from '../../components/card/card.component';
 import { FiltersBarComponent } from '../../components/filters-bar/filters-bar.component';
 import { FavoriteListHandlerService } from '../../services/favorite-list-handler/favorite-list-handler.service';
 import { BehaviorSubject, Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { LoaderComponent } from '../../components/loader/loader.component';
 import { MatButtonModule } from '@angular/material/button';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -33,7 +33,7 @@ export class FavoritesListComponent {
   dogsSubs = new Subscription(); 
   favoritesSubs = new Subscription();
 
-  constructor(private listHandlerService: FavoriteListHandlerService, private router: Router, private dogService: DogsService, private route: ActivatedRoute,) {
+  constructor(private listHandlerService: FavoriteListHandlerService, private router: Router, private dogService: DogsService, private route: ActivatedRoute, private location: Location) {
 
   }
 
@@ -76,6 +76,10 @@ export class FavoritesListComponent {
       }
       return 0;
     });
+  }
+
+  goHome() {
+    this.router.navigate(['/user/dogs-list'])
   }
 
   ngOnDestroy() {
