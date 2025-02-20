@@ -1,0 +1,19 @@
+.layout__body-wrapper {
+    overflow-y: auto;
+    height: calc(100% - 124px);
+    width: calc(100% - 2rem);
+    max-width: 1440px;
+    margin: 0 auto;
+
+    &--full {
+        height: 100%;
+    }
+
+    &--with-bg {
+        background-image: url("../../public/assets/paws-bg.jpg");
+        background-color: rgba(249, 248, 249, 0.985);
+        background-repeat: repeat;
+        background-blend-mode: lighten;
+        background-size: contain;
+    }
+}

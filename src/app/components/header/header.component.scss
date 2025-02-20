@@ -1,0 +1,22 @@
+.header__wrapper {
+    height: 64px;
+    background-color: var(--primary-color);
+
+    .header__logo-box {
+        width: 132px;
+        height: 100%;
+
+        img {
+            object-fit: contain;
+        }
+    }
+
+    .header__icons-box {
+
+        img {
+            width: 24px;
+            aspect-ratio: 1/1;
+            object-fit: contain;
+        }
+    }
+}

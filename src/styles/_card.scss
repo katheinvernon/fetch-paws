@@ -1,0 +1,51 @@
+@import './mixins';
+
+.card__wrapper {
+    flex: 100%;
+    max-width: 400px;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--primary-color);
+    
+    @include from($tablet) {
+        padding: 1rem;
+        box-shadow: 5px 4px 20px #e0e0e0;
+        flex: 50%;
+        border: none;
+    }
+    
+    @include from($desktop) {
+        flex: 33.33%;
+    }
+    
+    .card__img-box {
+        min-width: 86px;
+        width: 120px;
+        aspect-ratio: 1/1;
+        
+        img {
+            object-fit: fill;
+            width: 100%;
+            aspect-ratio: 1/1;
+        }
+    }
+    
+    .card__info-box {
+        height: 100%;
+        width: calc(60% - 2rem - 24px);
+
+        .card__info-text-group {
+            font-size: 1rem;
+            color: var(--color-black)
+        }
+    }
+
+    .card__like-icon__box {
+        width: 24px;
+
+        img {
+            object-fit: contain;
+            width: 100%;
+            aspect-ratio: 1/1;
+        }
+    }
+}

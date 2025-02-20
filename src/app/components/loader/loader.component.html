@@ -1,0 +1,8 @@
+<div class="loader-wrapper" [ngClass]="{ 'loader-wrapper--full-screen' : options.overlay, 'loader-wrapper--inline': options.inline,
+'loader-wrapper--modal': options.affectModal}">
+  @if (options.overlay) {
+    <div class="loader-overlay"></div>
+  }
+  <div class="loader"></div>
+  <div class="loader-text text-primary mt-1">Loading...</div>
+</div>

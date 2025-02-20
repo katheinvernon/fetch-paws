@@ -1,0 +1,52 @@
+@use '@angular/material' as mat;
+
+// Customize the entire app. Change :root to your selector if you want to scope the styles.
+:root {
+  @include mat.form-field-overrides((
+    outlined-outline-color: var(--primary-color),
+    outlined-hover-outline-color: var(--accent-color),
+    outlined-focus-outline-color: var(--secondary-color),
+    outlined-label-text-color: var(--color-black),
+    outlined-input-text-color: var (--color-black),
+    outlined-focus-label-text-color: var (--color-black),
+    outlined-hover-label-text-color: var (--accent-black),
+    outlined-error-focus-outline-color: var(--danger-color),
+    outlined-error-outline-color: var(--danger-color),
+    error-text-color: var(--danger-color),
+    outlined-error-hover-outline-color: var(--danger-color-50)
+  ));
+
+  @include mat.button-overrides((
+    filled-container-color: var(--secondary-color),
+    filled-label-text-color: var(--color-black),
+  ));
+
+  @include mat.fab-overrides((
+    extended-container-height: 28px,
+  ));
+
+  @include mat.card-overrides((
+    outlined-container-color: var(--color-white),
+    outlined-outline-color: var(--primary-color)
+  ));
+
+  @include mat.bottom-sheet-overrides((
+    container-background-color: var(--color-white),
+    container-text-color: var(--primary-color),
+  ));
+
+  @include mat.slider-overrides((
+    handle-color: var(--primary-color),
+    active-track-color: var(--primary-color),
+    focus-handle-color: var(--secondary-color),
+  ));
+
+  @include mat.paginator-overrides((
+    // container-text-color: orange,
+    container-background-color: var(--primary-color),
+  ));
+}
+
+mat-slider {
+    width: 80% !important;
+  }

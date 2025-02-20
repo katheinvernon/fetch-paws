@@ -1,1 +1,39 @@
 /* You can add global styles to this file, and also import other style files */
+@import "./styles/variables";
+@import "./styles/utils";
+@import "./styles/mixins";
+@import "./styles/general-layout";
+@import "./styles/card";
+@import "./styles/material-override";
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    background-color: var(--color-white);
+}
+
+h1 {
+    font-size: 1.5rem;
+
+    @include from($desktop) {
+        font-size: 2rem;
+    }
+}
+
+app-card {
+    flex: 100%;
+    max-width: 400px;
+
+    @include from($tablet) {
+        flex: 50%;
+    }
+    
+    @include from($desktop) {
+        flex: 33.33%;
+    }
+}

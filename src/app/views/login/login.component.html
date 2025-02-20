@@ -1,0 +1,27 @@
+<div class="login__layout-wrapper w-100 d-flex align-c justify-c">
+    <div class="px-3 d-flex flex-column align-c justify-c">
+        <div class="login__logo-box">
+            <img src="assets/logo.png" alt="logo">
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()"
+            class="login__form-wrapper d-flex justify-c align-c no-overflow flex-wrap">
+            <mat-form-field appearance="outline" class="login__form-field pb-3">
+                <mat-label for="email">Email</mat-label>
+                <input matInput placeholder="Email" id="email" type="email" formControlName="email">
+                <!-- <mat-error>{{getErrorMessage('email')}}</mat-error> -->
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="login__form-field pb-3">
+                <mat-label for="name">Full name</mat-label>
+                <input matInput placeholder="Fullname" id="name" type="text" formControlName="name">
+                <!-- <mat-error>{{getErrorMessage('fullName')}}</mat-error> -->
+            </mat-form-field>
+
+            @if (isLoading | async) {
+            <app-loader [options]="{inline: true}"></app-loader>
+            } @else {
+            <button mat-flat-button type="submit" class="w-100">Login</button>
+            }
+        </form>
+    </div>
+</div>

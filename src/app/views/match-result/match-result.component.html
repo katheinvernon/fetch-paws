@@ -1,0 +1,35 @@
+<app-header></app-header>
+<div class="layout__body-wrapper layout__body-wrapper--with-bg px-2 text-center">
+    <h1 class="text-primary text-center">This is your perfect match!</h1>
+
+    @if (isLoading | async) {
+    <app-loader></app-loader>
+    } @else {
+    <div class="d-flex match-view__dog-wrapper flex-column justify-c align-c">
+        <div class="match-view__img-box">
+            <img [src]="dog.img" [alt]="dog.name">
+        </div>
+        <div class="card__info-box mx-2 d-flex flex-column gap-1 justify-sb mb-2 align-s">
+            <div class="d-flex align-c gap-1 card__info-text-group gap-1">
+                <span><b>Name:</b></span>
+                <span>{{dog.name}}</span>
+            </div>
+            <div class="d-flex align-c gap-1 card__info-text-group">
+                <span><b>Age:</b></span>
+                <span>{{dog.age}}</span>
+            </div>
+            <div class="d-flex align-c gap-1 card__info-text-group2">
+                <span><b>Zip code:</b></span>
+                <span>{{dog.zip_code}}</span>
+            </div>
+            <div class="d-flex align-c gap-1 card__info-text-group">
+                <span><b>Breed:</b></span>
+                <span>{{dog.breed}}</span>
+            </div>
+        </div>
+    </div>
+    }
+
+    <button mat-flat-button type="button" (click)="goBack()">Go back</button>
+
+</div>

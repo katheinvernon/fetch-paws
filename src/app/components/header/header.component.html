@@ -1,0 +1,16 @@
+<div class="header__wrapper d-flex w-100">
+    <div class="mx-3 my-1 w-100 d-flex justify-sb">
+        <div class="header__logo-box">
+            <a [routerLink]="'/user/dogs-list'">
+                <img class="cursor-pointer" src="assets/white_logo.png" alt="logo">
+            </a>
+        </div>
+        <div class="header__icons-box gap-3 d-flex align-c">
+            <a [routerLink]="'/user/favorites-list'">
+                <img class="cursor-pointer" src="assets/favorite-list.png" alt="favorite icon">
+            </a>
+            
+            <img class="cursor-pointer" (click)="logout()" src="assets/logout.png" alt="logout icon">
+        </div>
+    </div>
+</div>

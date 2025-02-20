@@ -1,0 +1,57 @@
+<mat-nav-list class="text-center">
+    <div class="w-100 d-flex justify-sb align-c">
+        <h1>Filters</h1>
+        <span class="cursor-pointer text-secondary" (click)="clearFilters()">Clear filters</span>
+    </div>
+
+    <mat-form-field class="w-100">
+        <mat-label>Breed(s)</mat-label>
+        <mat-select [(ngModel)]="breedsSelector" (selectionChange)="breedsSelectionHandler()" multiple>
+            @for (breed of breeds; track breed) {
+            <mat-option [value]="breed">{{breed}}</mat-option>
+            }
+        </mat-select>
+        <!-- <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event); breedInput.value = ''">
+            @for (breed of filteredBreeds; track breed.id){
+                <mat-option [value]="breed.id">{{breed.name}}</mat-option>
+            }
+          </mat-autocomplete> -->
+    </mat-form-field>
+
+    <mat-form-field class="w-100 mb-2">
+        <mat-label>Zip code(s)</mat-label>
+        <mat-chip-grid #chipGrid aria-label="Enter zip codes">
+          @for (zipCode of zipCodesSelected; track zipCode) {
+            <mat-chip-row
+              (removed)="removeZipCode(zipCode)"
+              [editable]="false"
+            >
+              {{zipCode}}
+              <button matChipRemove [attr.aria-label]="'remove ' + zipCode">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip-row>
+          }
+          <input
+            placeholder="New zip code..."
+            [matChipInputFor]="chipGrid"
+            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+            [matChipInputAddOnBlur]="addOnBlur"
+            (matChipInputTokenEnd)="addZipCode($event)"
+            [(ngModel)]="zipCode"
+            minlength="5" maxlength="5"
+          />
+        </mat-chip-grid>
+      </mat-form-field>
+    
+    <mat-label>Age range</mat-label>
+    <div class="w-100">
+        <mat-slider min="0" max="20">
+            <input matSliderStartThumb [(ngModel)]="minAge" (change)="ageRangeHandler()">
+            <input  matSliderEndThumb [(ngModel)]="maxAge" (change)="ageRangeHandler()">
+          </mat-slider>
+          <span class="ml-1">{{minAge + ' - ' + maxAge}}</span>
+    </div>
+
+    <button mat-flat-button (click)="applyFilters()">Apply filters</button>
+</mat-nav-list>

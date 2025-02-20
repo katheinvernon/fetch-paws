@@ -1,0 +1,26 @@
+<div class="w-100 my-2">
+    <div class="filters__inner-box d-flex px-3" [ngClass]="{'justify-sb': config.filters && config.sorts, 'justify-c': config.filters && !config.sorts || !config.filters && config.sorts}">
+        @if (config.sorts) {
+            <div class="filters__sorts-wrapper d-flex">
+                @for (sort of sortingElements; track sort.key; let i = $index) {
+                    <div class="sort-box cursor-pointer  d-flex align-c" [ngClass]="{'is-active': sort.active}" (click)="sortHandler(sort.key, i)">
+                        <span>{{sort.label}}</span>
+                        @if (!sort.active) {
+                            <img src="assets/sort.png" alt="sort icon">
+                        } @else if (sort.active && sort.direction === 'asc') {
+                            <img src="assets/asc-sort.png" alt="ascending sort icon">
+                        } @else {
+                            <img src="assets/desc-sort.png" alt="descending sort icon">
+                        }
+                    </div>
+                }
+            </div>
+        }
+        @if(config.filters) {
+            <div class="filter-box d-flex align-c gap-1 cursor-pointer" (click)="openBottomSheet()">
+                <span>Filter results</span>
+                <img src="assets/filter.png" alt="filter icon">
+            </div>
+        }
+    </div>
+</div>

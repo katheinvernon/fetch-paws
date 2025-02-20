@@ -1,0 +1,39 @@
+@import '../../../styles/mixins';
+
+.cards-wrapper {
+    margin-top: 3rem;
+    row-gap: 3rem;
+    column-gap: 3rem;
+}
+
+.paginator__wrapper {
+    background-color: var(--color-white);
+    left: 0;
+    bottom: 0;
+    width: calc(100% - 2rem);
+    margin: 0 auto;
+}
+
+.dogs-list__layout {
+    padding-bottom: 146px;
+    height: calc(100% - 276px);
+    overflow: hidden;
+
+    @include from ($tablet) {
+        padding-bottom: 124px;
+        height: calc(100% - 256px);
+    }
+}
+
+.action-button__wrapper {
+    background-color: var(--color-white);
+    left: 0;
+    bottom: 0;
+    width: calc(100% - 2rem);
+    margin: 1rem auto;
+    
+    @include from ($tablet) {
+        left: 25%;
+        width: 50%;
+    }
+}
