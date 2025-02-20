@@ -45,10 +45,11 @@ export class DogsListComponent {
   }
 
   ngOnInit() {
+    this.isLoading.next(true);
     this.getFilters().then(res => {
       this.getDogs(res);
     }).catch(error => {
-      console.error('Error getting filters information', error);
+      console.error('Error getting filters information, please reload the page', error);
     });
 
     this.favoritesSubs = this.listHandlerService.favoriteDogs.subscribe(dogsList => {
@@ -59,7 +60,7 @@ export class DogsListComponent {
   getFilters(filtersChanged?: boolean): Promise<object> {
     return new Promise((resolve) => {
       const params = this.route.snapshot.queryParams;
-      let query = {};
+      let query: any = {};
 
       if (params['breeds']) query = { breeds: JSON.parse(params['breeds']) };
       if (params['zipCodes']) query = { ...query, zipCodes: JSON.parse(params['zipCodes']) };
@@ -67,42 +68,27 @@ export class DogsListComponent {
       if (params['ageMax']) query = { ...query, ageMax: params['ageMax'] };
       if (params['sort']) query = { ...query, sort: params['sort'] };
 
-      if (params['size']) {
-        query = { ...query, size: params['size'] };
-        this.pageSize = params['size'];
-      } else {
-        query = { ...query, size: this.pageSize };
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: {size: this.pageSize},
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-      }
-
-      if (!filtersChanged) {
-        if (params['from']) {
-          query = { ...query, from: params['from'] };
-          this.pageIndex = params['from'] / params['size'];
-        } else {
-          query = { ...query, from: this.pageIndex };
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: {from: this.pageIndex},
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        }
-      } else {
-        this.pageIndex = 0;
+      
+      const pageSize = params['size'] || this.pageSize;
+      let pageIndex = params['from'] ? params['from'] / pageSize : this.pageIndex;
+      query = { ...query, size: pageSize, from: pageIndex};
+      
+      
+      if (filtersChanged) {
+        pageIndex = 0;
         query = { ...query, from: 0 };
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: {from: 0},
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-      }
+      } 
+      console.log('dsadasdasvff dfb', params['size'], params['from']);
+
+      this.pageIndex = pageIndex;
+      this.pageSize = pageSize;
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {from: query.from, size: query.size},
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
 
       resolve(query);
     });
@@ -121,6 +107,7 @@ export class DogsListComponent {
       })
     ).subscribe((res: any) => {
       this.doggies = res.body;
+      this.isLoading.next(false);
     });
   }
 
@@ -134,39 +121,29 @@ export class DogsListComponent {
 
   //Paginator
 
-  handlePageEvent(e: PageEvent) {
+  async handlePageEvent(e: PageEvent) {
     this.isLoading.next(true);
-    this.setPaginationValues(e).then(() => {
-      this.getFilters().then(res => {
-        this.getDogs(res);
-        this.isLoading.next(false);
-      }).catch(error => {
-        console.error('Error getting filters information', error);
-        this.isLoading.next(false);
-      });
-    }).catch(error => {
-      console.error('Error setting paginator information', error);
+    try {
+      await this.setPaginationValues(e);
+      const filtersQuery = await this.getFilters();
+      this.getDogs(filtersQuery);
+    } catch (error) {
+      console.error(error);
+    } finally {
       this.isLoading.next(false);
-    });
+    }
   }
 
   setPaginationValues(e: PageEvent): Promise<void> {
     return new Promise((resolve) => {
-      if (this.pageSize != e.pageSize) {
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { size: e.pageSize, from: '0' },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-      } else {
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: {from: e.pageIndex * e.pageSize},
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-      }
+      const from = this.pageSize != e.pageSize ? 0 : e.pageIndex * e.pageSize;
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {size: e.pageSize, from: from},
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
 
       this.pageEvent = e;
       this.length = e.length;

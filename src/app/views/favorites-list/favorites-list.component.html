@@ -7,11 +7,15 @@
     </div>
     <div class="layout__body-wrapper layout__body-wrapper--full px-2">
         <h1 class="text-primary text-center">My favorites </h1>
-        <div class="d-flex flex-wrap w-100 cards-wrapper justify-c">
-            @for(dog of doggies; track dog.id) {
-            <app-card [dog]="dog"></app-card>
-            }
-        </div>
+        @if(hasFavorites) {
+            <div class="d-flex flex-wrap w-100 cards-wrapper justify-c">
+                @for(dog of doggies; track dog.id) {
+                <app-card [dog]="dog"></app-card>
+                }
+            </div>
+        } @else {
+            <span>You don't have any favorite dog</span>
+        }
 
     </div>
     <div class="action-button__wrapper px-2 absolute">
