@@ -57,6 +57,11 @@ export class DogsListComponent {
     });
   }
 
+  /**
+   * @description get filter values from route query params
+   * @param filtersChanged This variable is used to check if any changes have been made to the filters
+   * @returns a variable query with all the applied filters
+   */
   getFilters(filtersChanged?: boolean): Promise<object> {
     return new Promise((resolve) => {
       const params = this.route.snapshot.queryParams;
@@ -67,7 +72,6 @@ export class DogsListComponent {
       if (params['ageMin']) query = { ...query, ageMin: params['ageMin'] };
       if (params['ageMax']) query = { ...query, ageMax: params['ageMax'] };
       if (params['sort']) query = { ...query, sort: params['sort'] };
-
       
       const pageSize = params['size'] || this.pageSize;
       let pageIndex = params['from'] ? params['from'] / pageSize : this.pageIndex;
@@ -78,7 +82,6 @@ export class DogsListComponent {
         pageIndex = 0;
         query = { ...query, from: 0 };
       } 
-      console.log('dsadasdasvff dfb', params['size'], params['from']);
 
       this.pageIndex = pageIndex;
       this.pageSize = pageSize;
@@ -94,6 +97,10 @@ export class DogsListComponent {
     });
   }
 
+  /**
+   * @description get all dogs that matches with the query
+   * @param query contains all the applied filters
+   */
   getDogs(query?: Object) {
     this.dogService.getAllDogs(query).pipe(
       map(res => res.body),
@@ -103,7 +110,6 @@ export class DogsListComponent {
           return this.dogService.postDogs(body.resultIds);
         }
         return of(null);
-
       })
     ).subscribe((res: any) => {
       this.doggies = res.body;
@@ -111,13 +117,17 @@ export class DogsListComponent {
     });
   }
 
-  filtersListener(event: any) {
+  /**
+   * @description received the output of the filters component
+   */
+  filtersListener(event: boolean) {
     this.getFilters(true).then(res => {
       this.getDogs(res);
     }).catch(error => {
       console.error('Error getting filters information', error);
     });
   }
+
 
   //Paginator
 

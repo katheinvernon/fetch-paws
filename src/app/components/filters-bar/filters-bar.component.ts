@@ -68,24 +68,33 @@ export class BottomSheet {
     });
   }
 
+  /**
+   * @description manages the add functionality of the zip code field
+   * @param event event displayed by the zip code field
+   */
   addZipCode(event: MatChipInputEvent): void {
     const value = (event.value || '').trim();
 
-    if (!this.zipCodesSelected.some(zc => zc === value) && this.zipCode !== '') {
-      if (this.validZipCode()) {
-        this.zipCodesSelected.push(value);
-        this.setTemporaryFilters('zipCodes', this.zipCodesSelected);
-        this.zipCode = '';
-
-        // Clear the input value
-        event.chipInput!.clear();
-
-      } else {
-        this.openSnackBar('Zip code not valid', 'Ok');
-      }
-    } else if (this.zipCodesSelected.some(zc => zc === value)) {
-      this.openSnackBar('Zip code already added', 'Ok');
+    if (!this.zipCode) {
+      return;
     }
+
+    if (!this.validZipCode()) {
+      this.openSnackBar('Invalid zip code', 'Ok');
+      return;
+    }
+
+    if (this.zipCodesSelected.some(zc => zc === value)) {
+      this.openSnackBar('Zip code already added', 'Ok');
+      return;
+    }
+
+    this.zipCodesSelected.push(value);
+    this.setTemporaryFilters('zipCodes', this.zipCodesSelected);
+    this.zipCode = '';
+
+    // Clear the input value
+    event.chipInput!.clear();
   }
 
   removeZipCode(zipCode: string): void {
@@ -108,81 +117,58 @@ export class BottomSheet {
 
   //Filters
   filtersHandler(key: 'breeds' | 'age' | 'zipCodes', value: any) {
+    let queryParam = {};
+
+    queryParam = value instanceof Array ? { [key]: JSON.stringify(value) } : { [key]: value };
+
     if (key === 'age') {
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: { ageMin: value.minAge, ageMax: value.maxAge },
-        queryParamsHandling: 'merge',
-        replaceUrl: true,
-      });
-    } else {
-      let aux = value;
-
-      if (value instanceof Array) {
-        aux = JSON.stringify(value);
-      }
-      const queryParam = { [key]: aux };
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: queryParam,
-        queryParamsHandling: 'merge',
-        replaceUrl: true,
-      });
+      queryParam = { ageMin: value.minAge, ageMax: value.maxAge }
     }
-  }
 
-  saveFilters(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.temporaryFilters.length > 0) {
-        let queryParam = {};
-
-        try {
-          this.temporaryFilters.forEach(tf => {
-            if (tf.key === 'age') {
-              queryParam = { ...queryParam, ageMin: tf.value.minAge, ageMax: tf.value.maxAge };
-            } else {
-              let aux = tf.value;
-              if (tf.value instanceof Array) {
-                aux = JSON.stringify(tf.value);
-              }
-
-              queryParam = { ...queryParam, [tf.key]: aux };
-            }
-          });
-
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: queryParam,
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          }).then(() => {
-            this.temporaryFilters = [];
-            resolve();
-          }).catch((error) => {
-            this.openSnackBar('An error occurred during navigation', 'Ok');
-            reject(error);
-          });
-
-        } catch (error) {
-          this.openSnackBar('Error processing filters', 'Ok');
-          reject(error);
-        }
-      } else {
-        this.openSnackBar('There are no filter changes to apply', 'Ok');
-        resolve();
-      }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: queryParam,
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 
-  applyFilters() {
-    this.saveFilters().then(() => {
+  saveFilters(): Promise<object> {
+    return new Promise((resolve, reject) => {
+      if (this.temporaryFilters.length < 1) {
+        this.openSnackBar('There are no filter changes to apply', 'Ok');
+        resolve({});
+      }
+      let queryParam = {};
+
+        this.temporaryFilters.forEach(tf => {
+          queryParam = tf.value instanceof Array ? { [tf.key]: JSON.stringify(tf.value) } : { [tf.key]: tf.value };
+
+          if (tf.key === 'age') {
+            queryParam = { ageMin: tf.value.minAge, ageMax: tf.value.maxAge }
+          }
+        });
+
+        resolve(queryParam);
+    });
+  }
+
+  async applyFilters() {
+    try {
+      const queryParams = await this.saveFilters();
+      await this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: queryParams,
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+      this.temporaryFilters = [];
       this.filtersChanged.emit(true);
       this.closeBottomSheet();
-    }).catch((error: any) => {
+    } catch (error) {
       console.error('Error applying filters', error);
       this.openSnackBar('Error applying filters', 'Ok');
-    })
-
+    }
   }
 
   clearFilters() {
@@ -311,45 +297,54 @@ export class FiltersBarComponent {
    * @description handle the sorting functionality
    * @param sortIndex Index of the sort (based on sortingElements array)
    * @param key sort key (based on sortingElements array)
-   * @param direction sort direction
+   * @param direction specific direction to force on the sort (optional)
    * @param initializing to check if it's called by the constructor
    */
-  sortHandler(key: string, sortIndex?: number, direction?: 'asc' | 'desc', initializing?: boolean) {
-    this.setSortValues(key, sortIndex, direction, initializing).then(() => {
+  async sortHandler(key: string, sortIndex?: number, direction?: 'asc' | 'desc', initializing?: boolean) {
+    try {
+      const queryParams = await this.sortFuncionality(key, sortIndex, direction);
+      await this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: queryParams,
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+
       if (!initializing) {
         this.filtersChanged.emit(true);
       }
-    }).catch(error => {
-      console.error('Error in sorting', error);
-    });
+    } catch (error) {
+      console.error('Something went wrong sorting', error);
+    }
   }
 
-  setSortValues(key: string, sortIndex?: number, direction?: 'asc' | 'desc', initializing?: boolean): Promise<void> {
+  /**
+   * @description manages sorting functionality 
+   * @param key selected sort key (based on sortingElements variable)
+   * @param sortIndex sort index (based on sortingElements variable)
+   * @param direction disire direction to sort (optional)
+   * @returns sort values
+   */
+  sortFuncionality(key: string, sortIndex?: number, direction?: 'asc' | 'desc'): Promise<object> {
     return new Promise((resolve) => {
-      if (sortIndex !== undefined && sortIndex !== -1) {
-        if (!this.sortingElements[sortIndex].active) {
-          this.sortingElements.forEach(sort => sort.active = false);
-          this.sortingElements[sortIndex].active = true;
-          this.sortingElements[sortIndex].direction = 'asc';
-        } else if (this.sortingElements[sortIndex].active && this.sortingElements[sortIndex].direction === 'asc') {
-          this.sortingElements[sortIndex].direction = 'desc';
-        } else {
-          this.sortingElements[sortIndex].direction = 'asc';
-        }
 
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { sort: `${this.sortingElements[sortIndex].key.toLowerCase()}:${this.sortingElements[sortIndex].direction}` },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-
-        resolve();
-      } else {
+      if (sortIndex === undefined || sortIndex === -1) {
         const index = this.sortingElements.findIndex(e => e.key === key.toUpperCase());
         this.sortingElements[index].active = true;
         this.sortingElements[index].direction = direction ?? 'asc';
-        resolve();
+        resolve({});
+      }
+
+      if (sortIndex !== undefined) {
+        if (!this.sortingElements[sortIndex].active) {
+          this.sortingElements.forEach(sort => sort.active = false);
+          this.sortingElements[sortIndex].active = true;
+        } 
+
+        this.sortingElements[sortIndex].direction = this.sortingElements[sortIndex].active && this.sortingElements[sortIndex].direction === 'asc' ? 'desc' : 'asc';
+
+        const queryParams = { sort: `${this.sortingElements[sortIndex].key.toLowerCase()}:${this.sortingElements[sortIndex].direction}` };
+        resolve(queryParams);
       }
     })
   }

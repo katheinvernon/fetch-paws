@@ -57,6 +57,10 @@ export class FavoritesListComponent {
     });
   }
 
+  /**
+   * @description get the dogs that are on the favorite list
+   * @param dogIds array with dog ids that are on the favorite list
+   */
   getDogs(dogIds: string[]) {
     this.dogsSubs = this.dogService.postDogs(dogIds).subscribe((res: any) => {
       this.doggies = res.body;
